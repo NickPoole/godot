@@ -62,6 +62,7 @@ class EditorFileSystemDirectory : public Object {
 		uint64_t import_modified_time = 0;
 		String import_md5;
 		Vector<String> import_dest_paths;
+		bool read_only = false;
 		bool import_valid = false;
 		String import_group_file;
 		Vector<String> deps;
@@ -94,6 +95,7 @@ public:
 	bool get_file_import_is_valid(int p_idx) const;
 	uint64_t get_file_modified_time(int p_idx) const;
 	uint64_t get_file_import_modified_time(int p_idx) const;
+	bool get_file_read_only(int p_idx) const;
 	String get_file_script_class_name(int p_idx) const; //used for scripts
 	String get_file_script_class_extends(int p_idx) const; //used for scripts
 	String get_file_script_class_icon_path(int p_idx) const; //used for scripts
@@ -212,6 +214,7 @@ class EditorFileSystem : public Node {
 		uint64_t import_modification_time = 0;
 		String import_md5;
 		Vector<String> import_dest_paths;
+		bool read_only = false;
 		Vector<String> deps;
 		bool import_valid = false;
 		String import_group_file;

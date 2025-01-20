@@ -35,7 +35,7 @@
 #include "core/io/stream_peer_tcp.h"
 #include "core/string/string_builder.h"
 
-#define FILESYSTEM_CACHE_VERSION 1
+#define FILESYSTEM_CACHE_VERSION 2
 #define FILESYSTEM_PROTOCOL_VERSION 1
 #define PASSWORD_LENGTH 32
 
@@ -67,6 +67,7 @@ Vector<RemoteFilesystemClient::FileCache> RemoteFilesystemClient::_load_cache_fi
 		fc.path = fields[0];
 		fc.server_modified_time = fields[1].to_int();
 		fc.modified_time = fields[2].to_int();
+		fc.read_only = fields[3].to_int();
 
 		String full_path = file_path.path_join(fc.path);
 		if (!FileAccess::exists(full_path)) {
@@ -121,7 +122,7 @@ Error RemoteFilesystemClient::_store_cache_file(const Vector<FileCache> &p_cache
 	ERR_FAIL_COND_V_MSG(f.is_null(), ERR_FILE_CANT_OPEN, vformat("Unable to open the remote cache file for writing: '%s'.", full_path));
 	f->store_line(itos(FILESYSTEM_CACHE_VERSION));
 	for (int i = 0; i < p_cache.size(); i++) {
-		String l = p_cache[i].path + "::" + itos(p_cache[i].server_modified_time) + "::" + itos(p_cache[i].modified_time);
+		String l = p_cache[i].path + "::" + itos(p_cache[i].server_modified_time) + "::" + itos(p_cache[i].modified_time) + "::" + itos(p_cache[i].read_only ? 1 : 0);
 		f->store_line(l);
 	}
 	return OK;
@@ -219,6 +220,8 @@ Error RemoteFilesystemClient::_synchronize_with_server(const String &p_host, int
 			sbuild.append(file_cache[i].path);
 			sbuild.append("::");
 			sbuild.append(itos(file_cache[i].server_modified_time));
+			sbuild.append("::");
+			sbuild.append(itos(file_cache[i].read_only ? 1 : 0 ));
 			sbuild.append("\n");
 		}
 		String s = sbuild.as_string();

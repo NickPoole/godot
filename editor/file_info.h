@@ -52,6 +52,7 @@ struct FileInfo {
 	Vector<String> sources;
 	bool import_broken = false;
 	uint64_t modified_time = 0;
+	bool read_only = false;
 
 	bool operator<(const FileInfo &p_fi) const {
 		return FileNoCaseComparator()(name, p_fi.name);

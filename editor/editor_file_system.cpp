@@ -165,6 +165,11 @@ uint64_t EditorFileSystemDirectory::get_file_import_modified_time(int p_idx) con
 	return files[p_idx]->import_modified_time;
 }
 
+bool EditorFileSystemDirectory::get_file_read_only(int p_idx) const {
+	ERR_FAIL_INDEX_V(p_idx, files.size(), 0);
+	return files[p_idx]->read_only;
+}
+
 String EditorFileSystemDirectory::get_file_script_class_name(int p_idx) const {
 	return files[p_idx]->script_class_name;
 }
@@ -401,6 +406,7 @@ void EditorFileSystem::_scan_filesystem() {
 					if (!dest_paths.is_empty()) {
 						fc.import_dest_paths = dest_paths.split("<*>");
 					}
+					fc.read_only = split[7].get_slice("<>", 5).to_int() != 0;
 
 					String deps = split[8].strip_edges();
 					if (deps.length()) {
@@ -919,6 +925,7 @@ bool EditorFileSystem::_update_scan_actions() {
 						ia.dir->files[idx]->import_md5 = FileAccess::get_md5(full_path + ".import");
 					}
 					ia.dir->files[idx]->import_dest_paths = _get_import_dest_paths(full_path);
+					ia.dir->files[idx]->read_only = FileAccess::get_read_only_attribute(full_path);
 				}
 
 				fs_changed = true;
@@ -1146,6 +1153,7 @@ void EditorFileSystem::_process_file_system(const ScannedDirectory *p_scan_dir, 
 
 		FileCache *fc = file_cache.getptr(path);
 		uint64_t mt = FileAccess::get_modified_time(path);
+		bool ro = FileAccess::get_read_only_attribute( path );
 
 		if (import_extensions.has(ext)) {
 			//is imported
@@ -1160,6 +1168,7 @@ void EditorFileSystem::_process_file_system(const ScannedDirectory *p_scan_dir, 
 				fi->import_modified_time = import_mt;
 				fi->import_md5 = fc->import_md5;
 				fi->import_dest_paths = fc->import_dest_paths;
+				fi->read_only = ro;
 				fi->import_valid = fc->import_valid;
 				fi->script_class_name = fc->script_class_name;
 				fi->import_group_file = fc->import_group_file;
@@ -1207,6 +1216,7 @@ void EditorFileSystem::_process_file_system(const ScannedDirectory *p_scan_dir, 
 				fi->import_modified_time = 0;
 				fi->import_md5 = "";
 				fi->import_dest_paths = Vector<String>();
+				fi->read_only = false;
 				fi->import_valid = (fi->type == "TextFile" || fi->type == "OtherFile") ? true : ResourceLoader::is_import_valid(path);
 
 				ItemAction ia;
@@ -1222,6 +1232,7 @@ void EditorFileSystem::_process_file_system(const ScannedDirectory *p_scan_dir, 
 				fi->resource_script_class = fc->resource_script_class;
 				fi->uid = fc->uid;
 				fi->modified_time = mt;
+				fi->read_only = ro;
 				fi->deps = fc->deps;
 				fi->import_modified_time = 0;
 				fi->import_md5 = "";
@@ -1262,6 +1273,7 @@ void EditorFileSystem::_process_file_system(const ScannedDirectory *p_scan_dir, 
 				fi->import_modified_time = 0;
 				fi->import_md5 = "";
 				fi->import_dest_paths = Vector<String>();
+				fi->read_only = ro;
 				fi->import_valid = true;
 
 				// Files in dep_update_list are forced for rescan to update dependencies. They don't need other updates.
@@ -1417,6 +1429,7 @@ void EditorFileSystem::_scan_fs_changes(EditorFileSystemDirectory *p_dir, ScanPr
 
 					String path = cd.path_join(fi->file);
 					fi->modified_time = FileAccess::get_modified_time(path);
+					fi->read_only = FileAccess::get_read_only_attribute(path);
 					fi->import_modified_time = 0;
 					fi->import_md5 = "";
 					fi->import_dest_paths = Vector<String>();
@@ -1479,8 +1492,9 @@ void EditorFileSystem::_scan_fs_changes(EditorFileSystemDirectory *p_dir, ScanPr
 			// needs to be trusted to prevent reading all the .import files and the md5
 			// each time the user switch back to Godot.
 			uint64_t mt = FileAccess::get_modified_time(path);
+			bool ro = FileAccess::get_read_only_attribute(path);
 			uint64_t import_mt = FileAccess::get_modified_time(path + ".import");
-			if (_is_test_for_reimport_needed(path, p_dir->files[i]->modified_time, mt, p_dir->files[i]->import_modified_time, import_mt, p_dir->files[i]->import_dest_paths)) {
+			if (_is_test_for_reimport_needed(path, p_dir->files[i]->modified_time, mt, p_dir->files[i]->import_modified_time, import_mt, p_dir->files[i]->import_dest_paths) || ro != p_dir->files[i]->read_only) {
 				ItemAction ia;
 				ia.action = ItemAction::ACTION_FILE_TEST_REIMPORT;
 				ia.dir = p_dir;
@@ -1489,8 +1503,9 @@ void EditorFileSystem::_scan_fs_changes(EditorFileSystemDirectory *p_dir, ScanPr
 			}
 		} else {
 			uint64_t mt = FileAccess::get_modified_time(path);
+			bool ro = FileAccess::get_read_only_attribute(path);
 
-			if (mt != p_dir->files[i]->modified_time) {
+			if (mt != p_dir->files[i]->modified_time || ro != p_dir->files[i]->read_only) {
 				p_dir->files[i]->modified_time = mt; //save new time, but test for reload
 
 				ItemAction ia;
@@ -1768,7 +1783,7 @@ void EditorFileSystem::_save_filesystem_cache(EditorFileSystemDirectory *p_dir, 
 		cache_string.append(itos(file_info->import_modified_time));
 		cache_string.append(itos(file_info->import_valid));
 		cache_string.append(file_info->import_group_file);
-		cache_string.append(String("<>").join({ file_info->script_class_name, file_info->script_class_extends, file_info->script_class_icon_path, file_info->import_md5, String("<*>").join(file_info->import_dest_paths) }));
+		cache_string.append(String("<>").join({ file_info->script_class_name, file_info->script_class_extends, file_info->script_class_icon_path, file_info->import_md5, String("<*>").join(file_info->import_dest_paths), itos(file_info->read_only ? 1 : 0) }));
 		cache_string.append(String("<>").join(file_info->deps));
 
 		p_file->store_line(String("::").join(cache_string));
@@ -2631,6 +2646,7 @@ Error EditorFileSystem::_reimport_group(const String &p_group_file, const Vector
 		fs->files[cpos]->import_modified_time = FileAccess::get_modified_time(file + ".import");
 		fs->files[cpos]->import_md5 = FileAccess::get_md5(file + ".import");
 		fs->files[cpos]->import_dest_paths = dest_paths;
+		fs->files[cpos]->read_only = FileAccess::get_read_only_attribute(file);
 		fs->files[cpos]->deps = _get_dependencies(file);
 		fs->files[cpos]->uid = uid;
 		fs->files[cpos]->type = importer->get_resource_type();
@@ -2734,6 +2750,7 @@ Error EditorFileSystem::_reimport_file(const String &p_file, const HashMap<Strin
 			fs->files[cpos]->import_modified_time = FileAccess::get_modified_time(p_file + ".import");
 			fs->files[cpos]->import_md5 = FileAccess::get_md5(p_file + ".import");
 			fs->files[cpos]->import_dest_paths = Vector<String>();
+			fs->files[cpos]->read_only = FileAccess::get_read_only_attribute(p_file);
 			fs->files[cpos]->deps.clear();
 			fs->files[cpos]->type = "";
 			fs->files[cpos]->import_valid = false;
@@ -2906,6 +2923,7 @@ Error EditorFileSystem::_reimport_file(const String &p_file, const HashMap<Strin
 		fs->files[cpos]->import_modified_time = FileAccess::get_modified_time(p_file + ".import");
 		fs->files[cpos]->import_md5 = FileAccess::get_md5(p_file + ".import");
 		fs->files[cpos]->import_dest_paths = dest_paths;
+		fs->files[cpos]->read_only = FileAccess::get_read_only_attribute(p_file);
 		fs->files[cpos]->deps = _get_dependencies(p_file);
 		fs->files[cpos]->type = importer->get_resource_type();
 		fs->files[cpos]->uid = uid;

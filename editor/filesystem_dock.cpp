@@ -285,6 +285,7 @@ void FileSystemDock::_create_tree(TreeItem *p_parent, EditorFileSystemDirectory 
 			file_info.icon_path = p_dir->get_file_icon_path(i);
 			file_info.import_broken = !p_dir->get_file_import_is_valid(i);
 			file_info.modified_time = p_dir->get_file_modified_time(i);
+			file_info.read_only = p_dir->get_file_read_only(i);
 
 			file_list.push_back(file_info);
 		}
