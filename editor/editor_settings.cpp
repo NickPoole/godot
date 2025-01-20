@@ -599,6 +599,7 @@ void EditorSettings::_load_defaults(Ref<ConfigFile> p_extra_config) {
 	// On save
 	_initial_set("filesystem/on_save/compress_binary_resources", true);
 	_initial_set("filesystem/on_save/safe_save_on_backup_then_rename", true);
+	EDITOR_SETTING_BASIC(Variant::STRING, PROPERTY_HINT_ENUM, "filesystem/on_save/readonly_handling", "ask", "ask,never,override,plugin")
 
 	// EditorFileServer
 	_initial_set("filesystem/file_server/port", 6010);

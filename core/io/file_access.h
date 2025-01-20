@@ -132,6 +132,7 @@ protected:
 
 private:
 	static bool backup_save;
+	static String readonly_handling;
 	thread_local static Error last_file_open_error;
 
 	AccessType _access_type = ACCESS_FILESYSTEM;
@@ -249,6 +250,9 @@ public:
 
 	static void set_backup_save(bool p_enable) { backup_save = p_enable; }
 	static bool is_backup_save_enabled() { return backup_save; }
+
+	static void set_readonly_handling(const String &p_mode) { readonly_handling = p_mode; }
+	static String get_readonly_handling() { return readonly_handling; }
 
 	static String get_md5(const String &p_file);
 	static String get_sha256(const String &p_file);

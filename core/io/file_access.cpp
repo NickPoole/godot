@@ -45,6 +45,7 @@ FileAccess::CreateFunc FileAccess::create_func[ACCESS_MAX] = {};
 FileAccess::FileCloseFailNotify FileAccess::close_fail_notify = nullptr;
 
 bool FileAccess::backup_save = false;
+String FileAccess::readonly_handling = "ask";
 thread_local Error FileAccess::last_file_open_error = OK;
 
 Ref<FileAccess> FileAccess::create(AccessType p_access) {
