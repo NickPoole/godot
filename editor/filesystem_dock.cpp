@@ -306,6 +306,8 @@ void FileSystemDock::_create_tree(TreeItem *p_parent, EditorFileSystemDirectory 
 				file_item->set_icon_overlay(0, get_editor_theme_icon(SNAME("LinkOverlay")));
 				file_item->set_tooltip_text(0, vformat(TTR("Link to: %s"), da->read_link(file_metadata)));
 			}
+			if (file_info.read_only)
+				file_item->set_icon_overlay(0, get_editor_theme_icon(SNAME("ReadOnlyOverlay"))); //ToDo: Multiple overlays?
 			file_item->set_icon_max_width(0, icon_size);
 			Color parent_bg_color = subdirectory_item->get_custom_bg_color(0);
 			if (has_custom_color) {
@@ -887,6 +889,7 @@ void FileSystemDock::_search(EditorFileSystemDirectory *p_path, List<FileInfo> *
 			file_info.path = p_path->get_file_path(i);
 			file_info.import_broken = !p_path->get_file_import_is_valid(i);
 			file_info.modified_time = p_path->get_file_modified_time(i);
+			file_info.read_only = p_path->get_file_read_only(i);
 
 			if (_is_file_type_disabled_by_feature_profile(file_info.type)) {
 				// This type is disabled, will not appear here.
@@ -925,6 +928,9 @@ void FileSystemDock::_update_file_list(bool p_keep_selection) {
 	Ref<Texture2D> folder_thumbnail;
 	Ref<Texture2D> file_thumbnail;
 	Ref<Texture2D> file_thumbnail_broken;
+	
+	// To stat for links
+	Ref<DirAccess> da = DirAccess::create(DirAccess::ACCESS_RESOURCES);
 
 	bool use_thumbnails = (file_list_display_mode == FILE_LIST_DISPLAY_THUMBNAILS);
 
@@ -995,6 +1001,7 @@ void FileSystemDock::_update_file_list(bool p_keep_selection) {
 					file_info.icon_path = efd->get_file_icon_path(index);
 					file_info.import_broken = !efd->get_file_import_is_valid(index);
 					file_info.modified_time = efd->get_file_modified_time(index);
+					file_info.read_only = efd->get_file_read_only(index);
 				} else {
 					file_info.type = "";
 					file_info.import_broken = true;
@@ -1071,6 +1078,11 @@ void FileSystemDock::_update_file_list(bool p_keep_selection) {
 					files->set_item_metadata(-1, dpath);
 					Color this_folder_color = has_custom_color ? folder_colors[assigned_folder_colors[dpath]] : inherited_folder_color;
 					files->set_item_icon_modulate(-1, editor_is_dark_theme ? this_folder_color : this_folder_color * ITEM_COLOR_SCALE);
+					
+					if (da->is_link(dpath)) {
+						files->set_item_icon_overlay(-1, get_editor_theme_icon(SNAME("LinkOverlay")));
+						files->set_item_tooltip(-1, vformat(TTR("Link to: %s"), da->read_link(dpath)));
+					}
 
 					if (previous_selection.has(dname)) {
 						files->select(files->get_item_count() - 1, false);
@@ -1088,6 +1100,7 @@ void FileSystemDock::_update_file_list(bool p_keep_selection) {
 				file_info.icon_path = efd->get_file_icon_path(i);
 				file_info.import_broken = !efd->get_file_import_is_valid(i);
 				file_info.modified_time = efd->get_file_modified_time(i);
+				file_info.read_only = efd->get_file_read_only(i);
 
 				file_list.push_back(file_info);
 			}
@@ -1144,6 +1157,13 @@ void FileSystemDock::_update_file_list(bool p_keep_selection) {
 			udata[1] = fname;
 			EditorResourcePreview::get_singleton()->queue_resource_preview(fpath, this, "_file_list_thumbnail_done", udata);
 		}
+
+		if (da->is_link(finfo->path)) {
+			files->set_item_icon_overlay(item_index, get_editor_theme_icon(SNAME("LinkOverlay")));
+			files->set_item_tooltip(item_index, vformat(TTR("Link to: %s"), da->read_link(finfo->path)));
+		}
+		if (finfo->read_only)
+			files->set_item_icon_overlay(item_index, get_editor_theme_icon(SNAME("ReadOnlyOverlay"))); //ToDo: Multiple overlays?
 
 		// Select the items.
 		if (previous_selection.has(fname)) {

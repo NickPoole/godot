@@ -341,6 +341,27 @@ void ItemList::set_item_tag_icon(int p_idx, const Ref<Texture2D> &p_tag_icon) {
 	shape_changed = true;
 }
 
+void ItemList::set_item_icon_overlay(int p_idx, const Ref<Texture2D> &p_icon_overlay) {
+	if (p_idx < 0) {
+		p_idx += get_item_count();
+	}
+	ERR_FAIL_INDEX(p_idx, items.size());
+
+	if (items[p_idx].icon_overlay == p_icon_overlay) {
+		return;
+	}
+
+	items.write[p_idx].icon_overlay = p_icon_overlay;
+	queue_redraw();
+	shape_changed = true;
+}
+
+Ref<Texture2D> ItemList::get_item_icon_overlay(int p_idx) const {
+	ERR_FAIL_INDEX_V(p_idx, items.size(), Ref<Texture2D>());
+
+	return items[p_idx].icon_overlay;
+}
+
 void ItemList::set_item_selectable(int p_idx, bool p_selectable) {
 	if (p_idx < 0) {
 		p_idx += get_item_count();
@@ -1355,6 +1376,24 @@ void ItemList::_notification(int p_what) {
 					}
 
 					draw_texture_rect(items[i].tag_icon, Rect2(draw_pos + base_ofs, tag_icon_size));
+				}
+
+				if (items[i].icon_overlay.is_valid()) {
+					Size2 tag_icon_size;
+					if (fixed_tag_icon_size.x > 0 && fixed_tag_icon_size.y > 0) {
+						tag_icon_size = fixed_tag_icon_size;
+					} else {
+						tag_icon_size = items[i].icon_overlay->get_size();
+					}
+
+					Point2 draw_pos = items[i].rect_cache.position;
+					draw_pos.x += MAX(theme_cache.h_separation, 0) / 2;
+					draw_pos.y += MAX(theme_cache.v_separation, 0) / 2;
+					if (rtl) {
+						draw_pos.x = size.width - draw_pos.x - tag_icon_size.x;
+					}
+
+					draw_texture_rect(items[i].icon_overlay, Rect2(draw_pos + base_ofs, tag_icon_size));
 				}
 
 				if (!items[i].text.is_empty()) {

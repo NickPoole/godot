@@ -58,6 +58,7 @@ private:
 		Rect2i icon_region;
 		Color icon_modulate = Color(1, 1, 1, 1);
 		Ref<Texture2D> tag_icon;
+		Ref<Texture2D> icon_overlay;
 		String text;
 		String xl_text;
 		Ref<TextParagraph> text_buf;
@@ -219,8 +220,11 @@ public:
 
 	void set_item_metadata(int p_idx, const Variant &p_metadata);
 	Variant get_item_metadata(int p_idx) const;
-
+	
 	void set_item_tag_icon(int p_idx, const Ref<Texture2D> &p_tag_icon);
+
+	void set_item_icon_overlay(int p_idx, const Ref<Texture2D> &p_icon_overlay);
+	Ref<Texture2D> get_item_icon_overlay(int p_idx) const;
 
 	void set_item_tooltip_enabled(int p_idx, const bool p_enabled);
 	bool is_item_tooltip_enabled(int p_idx) const;

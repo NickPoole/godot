@@ -266,6 +266,19 @@ bool DirAccessWindows::dir_exists(String p_dir) {
 	return (fileAttr & FILE_ATTRIBUTE_DIRECTORY);
 }
 
+bool DirAccessWindows::is_writable(String p_dir) {
+	GLOBAL_LOCK_FUNCTION
+
+	String dir = fix_path(p_dir);
+
+	DWORD fileAttr;
+	fileAttr = GetFileAttributesW((LPCWSTR)(dir.utf16().get_data()));
+	if (INVALID_FILE_ATTRIBUTES == fileAttr) {
+		return false;
+	}
+	return !(fileAttr & FILE_ATTRIBUTE_READONLY);
+}
+
 Error DirAccessWindows::rename(String p_path, String p_new_path) {
 	String path = fix_path(p_path);
 	String new_path = fix_path(p_new_path);

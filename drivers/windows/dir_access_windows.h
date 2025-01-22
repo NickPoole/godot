@@ -71,6 +71,7 @@ public:
 
 	virtual bool file_exists(String p_file) override;
 	virtual bool dir_exists(String p_dir) override;
+	virtual bool is_writable(String p_dir) override;
 
 	virtual Error make_dir(String p_dir) override;
 
