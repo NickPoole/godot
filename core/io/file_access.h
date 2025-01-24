@@ -85,6 +85,7 @@ public:
 	};
 
 	typedef void (*FileCloseFailNotify)(const String &);
+	typedef void (*FileHandleReadOnly)(const String &);
 
 	typedef Ref<FileAccess> (*CreateFunc)();
 	bool big_endian = false;
@@ -108,6 +109,7 @@ protected:
 	virtual void _set_access_type(AccessType p_access);
 
 	static FileCloseFailNotify close_fail_notify;
+	static FileHandleReadOnly handle_read_only;
 
 #ifndef DISABLE_DEPRECATED
 	static Ref<FileAccess> _open_encrypted_bind_compat_98918(const String &p_path, ModeFlags p_mode_flags, const Vector<uint8_t> &p_key);
@@ -153,6 +155,7 @@ private:
 
 public:
 	static void set_file_close_fail_notify_callback(FileCloseFailNotify p_cbk) { close_fail_notify = p_cbk; }
+	static void set_file_handle_read_only_callback(FileHandleReadOnly p_cbk) { handle_read_only = p_cbk; }
 
 	virtual bool is_open() const = 0; ///< true when file is open
 
@@ -250,9 +253,6 @@ public:
 
 	static void set_backup_save(bool p_enable) { backup_save = p_enable; }
 	static bool is_backup_save_enabled() { return backup_save; }
-
-	static void set_readonly_handling(const String &p_mode) { readonly_handling = p_mode; }
-	static String get_readonly_handling() { return readonly_handling; }
 
 	static String get_md5(const String &p_file);
 	static String get_sha256(const String &p_file);

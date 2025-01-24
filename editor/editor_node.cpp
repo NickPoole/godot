@@ -5932,6 +5932,31 @@ void EditorNode::_file_access_close_error_notify_impl(const String &p_str) {
 	add_io_error(vformat(TTR("Unable to write to file '%s', file in use, locked or lacking permissions."), p_str));
 }
 
+void EditorNode::_file_access_handle_read_only(const String &p_path) {
+	callable_mp_static(&EditorNode::_file_access_handle_read_only_impl).call_deferred(p_path);
+}
+
+void EditorNode::_file_access_handle_read_only_impl(const String &p_path) {
+	String mode = EDITOR_GET( "filesystem/on_save/readonly_handling" );
+	if ( mode == "ask" ) {
+		// prompt per-file for a decision
+		mode = "plugin"; //ToDo: write this up to an actual dialog
+	}
+
+	if (mode == "plugin" ) {
+		// let a plugin handle making the file writable
+		VersionControlEditorPlugin::get_singleton()->make_file_writable( p_path );
+		
+	} else if (mode == "always" ) {
+		// unset the readonly flag
+		Error err = FileAccess::set_read_only_attribute( p_path, false );
+		if ( err != OK ) {
+			// add_io_error()?
+		}
+	}
+	// leave the readonly flag as-is
+}
+
 // Recursive function to inform nodes that an array of nodes have had their scene reimported.
 // It will attempt to call a method named '_nodes_scene_reimported' on every node in the
 // tree so that editor scripts which create transient nodes will have the opportunity
@@ -6854,7 +6879,6 @@ EditorNode::EditorNode() {
 	ED_SHORTCUT("editor/ungroup_selected_nodes", TTRC("Ungroup Selected Node(s)"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::G);
 	
 	FileAccess::set_backup_save(EDITOR_GET("filesystem/on_save/safe_save_on_backup_then_rename"));
-	FileAccess::set_readonly_handling(EDITOR_GET("filesystem/on_save/readonly_handling"));
 
 	_update_vsync_mode();
 
@@ -7996,8 +8020,9 @@ EditorNode::EditorNode() {
 	scene_tabs->update_scene_tabs();
 
 	ImportDock::get_singleton()->initialize_import_options();
-
+	
 	FileAccess::set_file_close_fail_notify_callback(_file_access_close_error_notify);
+	FileAccess::set_file_handle_read_only_callback(_file_access_handle_read_only);
 
 	print_handler.printfunc = _print_handler;
 	print_handler.userdata = this;

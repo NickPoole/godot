@@ -193,6 +193,15 @@ Error FileAccessWindows::open_internal(const String &p_path, int p_mode_flags) {
 	}
 #endif
 
+	if( handle_read_only )
+	{
+		DWORD fileAttr;
+		fileAttr = GetFileAttributesW( (LPCWSTR) (path.utf16().get_data()) );
+		if( INVALID_FILE_ATTRIBUTES != fileAttr && fileAttr & FILE_ATTRIBUTE_READONLY ) {
+			handle_read_only( p_path );
+		}
+	}
+
 	if (is_backup_save_enabled() && p_mode_flags == WRITE) {
 		save_path = path;
 		// Create a temporary file in the same directory as the target file.

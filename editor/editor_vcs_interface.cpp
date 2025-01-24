@@ -170,6 +170,12 @@ void EditorVCSInterface::fetch(const String &p_remote) {
 	GDVIRTUAL_CALL(_fetch, p_remote);
 }
 
+bool EditorVCSInterface::make_file_writable(const String &p_file_path) {
+	bool result = false;
+	GDVIRTUAL_CALL(_make_file_writable, p_file_path, result);
+	return result;
+}
+
 List<EditorVCSInterface::DiffHunk> EditorVCSInterface::get_line_diff(const String &p_file_path, const String &p_text) {
 	TypedArray<Dictionary> result;
 	if (!GDVIRTUAL_CALL(_get_line_diff, p_file_path, p_text, result)) {
@@ -329,6 +335,7 @@ void EditorVCSInterface::_bind_methods() {
 	GDVIRTUAL_BIND(_push, "remote", "force");
 	GDVIRTUAL_BIND(_fetch, "remote");
 	GDVIRTUAL_BIND(_get_line_diff, "file_path", "text");
+	GDVIRTUAL_BIND(_make_file_writable, "file_path");
 
 	ClassDB::bind_method(D_METHOD("create_diff_line", "new_line_no", "old_line_no", "content", "status"), &EditorVCSInterface::create_diff_line);
 	ClassDB::bind_method(D_METHOD("create_diff_hunk", "old_start", "new_start", "old_lines", "new_lines"), &EditorVCSInterface::create_diff_hunk);

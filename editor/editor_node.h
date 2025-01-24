@@ -492,6 +492,9 @@ private:
 
 	static void _file_access_close_error_notify(const String &p_str);
 	static void _file_access_close_error_notify_impl(const String &p_str);
+	
+	static void _file_access_handle_read_only(const String &p_path);
+	static void _file_access_handle_read_only_impl(const String &p_path);
 
 	static void _print_handler(void *p_this, const String &p_string, bool p_error, bool p_rich);
 	static void _print_handler_impl(const String &p_string, bool p_error, bool p_rich);

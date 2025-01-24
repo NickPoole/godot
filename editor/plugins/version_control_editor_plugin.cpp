@@ -902,6 +902,12 @@ void VersionControlEditorPlugin::_toggle_vcs_integration(bool p_toggled) {
 	}
 }
 
+void VersionControlEditorPlugin::_make_file_writable(const String &p_file_path) {
+	CHECK_PLUGIN_INITIALIZED();
+
+	EditorVCSInterface::get_singleton()->make_file_writable(p_file_path);
+}
+
 void VersionControlEditorPlugin::fetch_available_vcs_plugin_names() {
 	available_plugins.clear();
 	ClassDB::get_direct_inheriters_from_class(EditorVCSInterface::get_class_static(), &available_plugins);
@@ -932,6 +938,13 @@ void VersionControlEditorPlugin::shut_down() {
 	EditorNode::get_bottom_panel()->remove_item(version_control_dock);
 
 	_set_vcs_ui_state(false);
+}
+
+void VersionControlEditorPlugin::make_file_writable(const String &p_file_path) {
+	if (!EditorVCSInterface::get_singleton()) {
+		return;
+	}
+	_make_file_writable(p_file_path);
 }
 
 VersionControlEditorPlugin::VersionControlEditorPlugin() {

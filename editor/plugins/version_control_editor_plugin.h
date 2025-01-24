@@ -193,6 +193,9 @@ private:
 	void _popup_file_dialog(const Variant &p_file_dialog_variant);
 	void _toggle_vcs_integration(bool p_toggled);
 
+	// VCS V2
+	void _make_file_writable(const String &p_file_path);
+
 	friend class EditorVCSInterface;
 
 protected:
@@ -209,6 +212,8 @@ public:
 	void register_editor();
 	void fetch_available_vcs_plugin_names();
 	void shut_down();
+
+	void make_file_writable(const String &p_file_path);
 
 	VersionControlEditorPlugin();
 	~VersionControlEditorPlugin();
