@@ -212,8 +212,9 @@ public:
 	void register_editor();
 	void fetch_available_vcs_plugin_names();
 	void shut_down();
-
+	
 	void make_file_writable(const String &p_file_path);
+	bool is_initialized();
 
 	VersionControlEditorPlugin();
 	~VersionControlEditorPlugin();

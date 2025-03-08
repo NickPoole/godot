@@ -5940,6 +5940,10 @@ void EditorNode::_file_access_handle_read_only_impl(const String &p_path) {
 	String mode = EDITOR_GET( "filesystem/on_save/readonly_handling" );
 	if ( mode == "ask" ) {
 		// prompt per-file for a decision
+		PopupPanel p;
+		
+		ReadonlyFileHandlerDialog popup(p_path, VersionControlEditorPlugin::get_singleton()->is_initialized());
+
 		mode = "plugin"; //ToDo: write this up to an actual dialog
 	}
 
@@ -8220,4 +8224,19 @@ EditorPluginList::EditorPluginList() {
 }
 
 EditorPluginList::~EditorPluginList() {
+}
+
+
+ReadonlyFileHandlerDialog::ReadonlyFileHandlerDialog(const String *p_path, bool p_hasvcs) {
+
+	set_text( vformat( TTR( "File '%s' is readonly. Choose:" ), p_path ) );
+
+	if ( p_hasvcs )
+		add_button( "Make writable with VCS plugin" );
+	add_button( "Make writable" );
+	add_button( "Leave readonly" );
+
+	update_default = memnew(CheckButton);
+	update_default->set_text(TTR("Always do this?"));
+	add_child(update_default);
 }

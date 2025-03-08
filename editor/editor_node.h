@@ -36,6 +36,8 @@
 #include "editor/editor_data.h"
 #include "editor/editor_folding.h"
 #include "editor/plugins/editor_plugin.h"
+#include "scene/gui/check_button.h"
+#include "scene/gui/dialogs.h"
 
 typedef void (*EditorNodeInitCallback)();
 typedef void (*EditorPluginInitializeCallback)();
@@ -994,6 +996,17 @@ struct EditorProgressBG {
 		task = p_task;
 	}
 	~EditorProgressBG() { EditorNode::progress_end_task_bg(task); }
+};
+
+
+class ReadonlyFileHandlerDialog : public AcceptDialog {
+	GDCLASS(ReadonlyFileHandlerDialog, AcceptDialog);
+
+	CheckButton* update_default;
+
+public:
+
+	ReadonlyFileHandlerDialog(const String *p_path, bool p_hasvcs);
 };
 
 #endif // EDITOR_NODE_H

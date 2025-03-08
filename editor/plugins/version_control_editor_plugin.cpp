@@ -947,6 +947,10 @@ void VersionControlEditorPlugin::make_file_writable(const String &p_file_path) {
 	_make_file_writable(p_file_path);
 }
 
+bool VersionControlEditorPlugin::is_initialized() {
+	return EditorVCSInterface::get_singleton();
+}
+
 VersionControlEditorPlugin::VersionControlEditorPlugin() {
 	singleton = this;
 
